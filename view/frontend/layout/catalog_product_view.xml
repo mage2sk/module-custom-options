@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="product.info.options" template="Panth_CustomOptions::product/view/options/luma/options.phtml"/>
+        <referenceBlock name="product.info.options.text" template="Panth_CustomOptions::product/view/options/luma/type/text.phtml"/>
+        <referenceBlock name="product.info.options.select" template="Panth_CustomOptions::product/view/options/luma/type/select.phtml"/>
+        <referenceBlock name="product.info.options.file" template="Panth_CustomOptions::product/view/options/luma/type/file.phtml"/>
+        <referenceBlock name="product.info.options.date" template="Panth_CustomOptions::product/view/options/luma/type/date.phtml"/>
+    </body>
+</page>

@@ -1,0 +1,100 @@
+<?php
+/**
+ * Panth_CustomOptions — styled file upload option (Luma compatible).
+ *
+ * @var \Magento\Catalog\Block\Product\View\Options\Type\File $block
+ * @var \Magento\Framework\View\Helper\SecureHtmlRenderer $secureRenderer
+ */
+
+$_option = $block->getOption();
+$_fileInfo = $block->getFileInfo();
+$_fileExists = $_fileInfo->hasData();
+$_fileName = 'options_' . $block->escapeHtmlAttr($_option->getId()) . '_file';
+$_fieldNameAction = $_fileName . '_action';
+$_fieldValueAction = $_fileExists ? 'save_old' : 'save_new';
+$_fileNamed = $_fileName . '_name';
+$isRequired = $_option->getIsRequire();
+?>
+
+<div class="panth-option-group field file<?= $isRequired ? ' required' : '' ?>">
+    <label class="panth-option-label" for="<?= /* @noEscape */ $_fileName ?>" id="<?= /* @noEscape */ $_fileName ?>-label">
+        <span><?= $block->escapeHtml($_option->getTitle()) ?></span>
+        <?php if ($isRequired) : ?>
+            <span class="panth-required">*</span>
+        <?php endif; ?>
+        <?php $price = $block->getFormattedPrice(); ?>
+        <?php if ($price) : ?>
+            <span class="panth-price-badge"><?= /* @noEscape */ $price ?></span>
+        <?php endif; ?>
+    </label>
+
+    <?php if ($_fileExists) : ?>
+        <div class="control">
+            <span class="<?= /* @noEscape */ $_fileNamed ?>"><?= $block->escapeHtml($_fileInfo->getTitle()) ?></span>
+            <a href="#" class="label" id="change-<?= /* @noEscape */ $_fileName ?>">
+                <?= $block->escapeHtml(__('Change')) ?>
+            </a>
+            <?= /* @noEscape */ $secureRenderer->renderEventListenerAsTag(
+                'onclick',
+                'event.preventDefault()',
+                'a#change-' . /* @noEscape */ $_fileName
+            ) ?>
+            <?php if (!$isRequired) : ?>
+                <input type="checkbox" id="delete-<?= /* @noEscape */ $_fileName ?>"/>
+                <span class="label"><?= $block->escapeHtml(__('Delete')) ?></span>
+            <?php endif; ?>
+        </div>
+    <?php endif; ?>
+
+    <div class="control" id="input-box-<?= /* @noEscape */ $_fileName ?>"
+         data-mage-init='{"priceOptionFile":{
+            "fileName":"<?= /* @noEscape */ $_fileName ?>",
+            "fileNamed":"<?= /* @noEscape */ $_fileNamed ?>",
+            "fieldNameAction":"<?= /* @noEscape */ $_fieldNameAction ?>",
+            "changeFileSelector":"#change-<?= /* @noEscape */ $_fileName ?>",
+            "deleteFileSelector":"#delete-<?= /* @noEscape */ $_fileName ?>"}}'>
+
+        <div class="panth-file-zone" id="panth-dropzone-<?= /* @noEscape */ $_fileName ?>">
+            <div class="panth-file-icon">&#128206;</div>
+            <div class="panth-file-text">
+                <?= $block->escapeHtml(__('Click to upload or drag and drop')) ?>
+            </div>
+            <div class="panth-file-name" id="panth-filename-<?= /* @noEscape */ $_fileName ?>"></div>
+            <input type="file"
+                   name="<?= /* @noEscape */ $_fileName ?>"
+                   id="<?= /* @noEscape */ $_fileName ?>"
+                   class="product-custom-option<?= $isRequired ? ' required' : '' ?>"
+                   <?= $_fileExists ? 'disabled="disabled"' : '' ?>
+                   onchange="var n=this.files[0]?this.files[0].name:'';document.getElementById('panth-filename-<?= /* @noEscape */ $_fileName ?>').textContent=n;"/>
+        </div>
+
+        <input type="hidden" class="product-custom-option"
+               name="<?= /* @noEscape */ $_fieldNameAction ?>"
+               value="<?= /* @noEscape */ $_fieldValueAction ?>"/>
+
+        <?php if ($_option->getFileExtension()) : ?>
+            <p class="panth-note">
+                <?= $block->escapeHtml(__('Allowed files:')) ?>
+                <strong><?= $block->escapeHtml($_option->getFileExtension()) ?></strong>
+            </p>
+        <?php endif; ?>
+        <?php if ($_option->getImageSizeX() > 0) : ?>
+            <p class="panth-note">
+                <?= $block->escapeHtml(__('Max width:')) ?>
+                <strong><?= (int) $_option->getImageSizeX() ?> px</strong>
+            </p>
+        <?php endif; ?>
+        <?php if ($_option->getImageSizeY() > 0) : ?>
+            <p class="panth-note">
+                <?= $block->escapeHtml(__('Max height:')) ?>
+                <strong><?= (int) $_option->getImageSizeY() ?> px</strong>
+            </p>
+        <?php endif; ?>
+    </div>
+
+    <?= $_fileExists ?
+        /* @noEscape */ $secureRenderer->renderStyleAsTag(
+            'display:none',
+            '#input-box-' . /* @noEscape */ $_fileName
+        ) : '' ?>
+</div>

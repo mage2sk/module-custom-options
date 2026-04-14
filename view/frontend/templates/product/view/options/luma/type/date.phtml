@@ -1,0 +1,65 @@
+<?php
+/**
+ * Panth_CustomOptions — styled date/time option (Luma compatible).
+ *
+ * @var \Magento\Catalog\Block\Product\View\Options\Type\Date $block
+ */
+
+$_option = $block->getOption();
+$_optionId = $block->escapeHtmlAttr($_option->getId());
+$isRequired = $_option->getIsRequire();
+$type = $_option->getType();
+$isDate = $type == \Magento\Catalog\Api\Data\ProductCustomOptionInterface::OPTION_TYPE_DATE
+       || $type == \Magento\Catalog\Api\Data\ProductCustomOptionInterface::OPTION_TYPE_DATE_TIME;
+$isTime = $type == \Magento\Catalog\Api\Data\ProductCustomOptionInterface::OPTION_TYPE_TIME
+       || $type == \Magento\Catalog\Api\Data\ProductCustomOptionInterface::OPTION_TYPE_DATE_TIME;
+?>
+
+<div class="panth-option-group field date<?= $isRequired ? ' required' : '' ?>"
+     data-mage-init='{"priceOptionDate":{"fromSelector":"#product_addtocart_form"}}'>
+    <fieldset class="fieldset fieldset-product-options-inner<?= $isRequired ? ' required' : '' ?>">
+        <label class="panth-option-label">
+            <span><?= $block->escapeHtml($_option->getTitle()) ?></span>
+            <?php if ($isRequired) : ?>
+                <span class="panth-required">*</span>
+            <?php endif; ?>
+            <?php $price = $block->getFormattedPrice(); ?>
+            <?php if ($price) : ?>
+                <span class="panth-price-badge"><?= /* @noEscape */ $price ?></span>
+            <?php endif; ?>
+        </label>
+
+        <div class="control" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+            <?php if ($isDate) : ?>
+                <?= $block->getDateHtml() ?>
+            <?php endif; ?>
+            <?php if ($isTime) : ?>
+                <?= $block->getTimeHtml() ?>
+            <?php endif; ?>
+
+            <?php if ($isRequired) : ?>
+                <input type="hidden"
+                       name="validate_datetime_<?= /* @noEscape */ $_optionId ?>"
+                       class="validate-datetime-<?= /* @noEscape */ $_optionId ?>"
+                       value=""
+                       data-validate="{'validate-required-datetime':<?= /* @noEscape */ $_optionId ?>}"/>
+            <?php else : ?>
+                <input type="hidden"
+                       name="validate_datetime_<?= /* @noEscape */ $_optionId ?>"
+                       class="validate-datetime-<?= /* @noEscape */ $_optionId ?>"
+                       value=""
+                       data-validate="{'validate-optional-datetime':<?= /* @noEscape */ $_optionId ?>}"/>
+            <?php endif; ?>
+
+            <script type="text/x-magento-init">
+                {
+                    "#product_addtocart_form": {
+                        "validation": {
+                            "ignore": ":hidden:not(input[name^='validate_datetime_'])"
+                        }
+                    }
+                }
+            </script>
+        </div>
+    </fieldset>
+</div>

@@ -91,16 +91,16 @@ via the module's `theme-config.json`.
 
 | Magento option type | Rendering |
 |---|---|
-| Text Field | Styled `<input type="text">` with character counter |
-| Text Area | Styled `<textarea>` with character counter |
-| File Upload | Drag-and-drop upload zone with file-type & size hints |
-| Drop-down | Styled `<select>` |
+| Text Field | Styled text input with character counter |
+| Text Area | Styled textarea with character counter |
+| File Upload | Drag-and-drop upload zone with file-type and size hints |
+| Drop-down | Styled select dropdown |
 | Radio Buttons | Card-style rows with custom radio indicators |
 | Checkboxes | Card-style rows with custom checkbox indicators |
-| Multiple Select | Styled `<select multiple>` |
-| Date | Native `<input type="date">` |
-| Time | Native `<input type="time">` |
-| Date & Time | Native `<input type="datetime-local">` |
+| Multiple Select | Styled multi-select dropdown |
+| Date | Native HTML5 date picker |
+| Time | Native HTML5 time picker |
+| Date and Time | Native HTML5 datetime-local picker |
 
 All option types support dynamic price display (incl. tax and excl. tax)
 and required-field validation.

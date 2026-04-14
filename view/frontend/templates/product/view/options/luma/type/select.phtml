@@ -1,0 +1,43 @@
+<?php
+/**
+ * Panth_CustomOptions — styled select/radio/checkbox option (Luma compatible).
+ *
+ * @var \Magento\Catalog\Block\Product\View\Options\Type\Select $block
+ */
+
+$_option = $block->getOption();
+$_optionId = $block->escapeHtmlAttr($_option->getId());
+$isRequired = $_option->getIsRequire();
+$type = $_option->getType();
+$isRadio = $type == \Magento\Catalog\Api\Data\ProductCustomOptionInterface::OPTION_TYPE_RADIO;
+$isCheckbox = $type == \Magento\Catalog\Api\Data\ProductCustomOptionInterface::OPTION_TYPE_CHECKBOX;
+$isCardStyle = $isRadio || $isCheckbox;
+?>
+
+<div class="panth-option-group field<?= /* @noEscape */ $isRequired ? ' required' : '' ?>">
+    <label class="panth-option-label" for="select_<?= /* @noEscape */ $_optionId ?>">
+        <span><?= $block->escapeHtml($_option->getTitle()) ?></span>
+        <?php if ($isRequired) : ?>
+            <span class="panth-required">*</span>
+        <?php endif; ?>
+    </label>
+
+    <div class="control" id="panth-select-<?= /* @noEscape */ $_optionId ?>">
+        <?= /* @noEscape */ $block->getValuesHtml() ?>
+        <?php if ($isRequired && $isCardStyle) : ?>
+            <span id="options-<?= /* @noEscape */ $_optionId ?>-container"></span>
+        <?php endif; ?>
+    </div>
+</div>
+
+<?php if ($isCardStyle) : ?>
+<script type="text/x-magento-init">
+    {
+        "#panth-select-<?= /* @noEscape */ $_optionId ?>": {
+            "Panth_CustomOptions/js/card-options": {
+                "optionId": "<?= /* @noEscape */ $_optionId ?>"
+            }
+        }
+    }
+</script>
+<?php endif; ?>

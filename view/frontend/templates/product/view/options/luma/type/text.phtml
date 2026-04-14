@@ -1,0 +1,90 @@
+<?php
+/**
+ * Panth_CustomOptions — styled text/textarea option (Luma compatible).
+ *
+ * @var \Magento\Catalog\Block\Product\View\Options\Type\Text $block
+ */
+
+$_option = $block->getOption();
+$_optionId = $block->escapeHtmlAttr($_option->getId());
+$isRequired = $_option->getIsRequire();
+$isArea = $_option->getType() == \Magento\Catalog\Api\Data\ProductCustomOptionInterface::OPTION_TYPE_AREA;
+$maxChars = $_option->getMaxCharacters();
+?>
+
+<div class="panth-option-group field<?= /* @noEscape */ $isRequired ? ' required' : '' ?><?= /* @noEscape */ $isArea ? ' textarea' : '' ?>">
+    <label class="panth-option-label" for="options_<?= /* @noEscape */ $_optionId ?>_text">
+        <span><?= $block->escapeHtml($_option->getTitle()) ?></span>
+        <?php if ($isRequired) : ?>
+            <span class="panth-required">*</span>
+        <?php endif; ?>
+        <?php $price = $block->getFormattedPrice(); ?>
+        <?php if ($price) : ?>
+            <span class="panth-price-badge"><?= /* @noEscape */ $price ?></span>
+        <?php endif; ?>
+    </label>
+
+    <div class="control">
+        <?php if (!$isArea) : ?>
+            <?php
+            $_textValidate = [];
+            if ($isRequired) {
+                $_textValidate['required'] = true;
+            }
+            if ($maxChars) {
+                $_textValidate['maxlength'] = $maxChars;
+            }
+            $_textValidate['validate-no-utf8mb4-characters'] = true;
+            ?>
+            <input type="text"
+                   id="options_<?= /* @noEscape */ $_optionId ?>_text"
+                   class="input-text product-custom-option panth-input"
+                   data-validate="<?= $block->escapeHtml(json_encode($_textValidate)) ?>"
+                   name="options[<?= /* @noEscape */ $_optionId ?>]"
+                   data-selector="options[<?= /* @noEscape */ $_optionId ?>]"
+                   value="<?= $block->escapeHtml($block->getDefaultValue()) ?>"
+                   placeholder="<?= $block->escapeHtmlAttr(__('Enter %1', $_option->getTitle())) ?>"/>
+        <?php else : ?>
+            <?php
+            $_textAreaValidate = [];
+            if ($isRequired) {
+                $_textAreaValidate['required'] = true;
+            }
+            if ($maxChars) {
+                $_textAreaValidate['maxlength'] = $maxChars;
+            }
+            $_textAreaValidate['validate-no-utf8mb4-characters'] = true;
+            ?>
+            <textarea id="options_<?= /* @noEscape */ $_optionId ?>_text"
+                      class="product-custom-option panth-input"
+                      data-validate="<?= $block->escapeHtml(json_encode($_textAreaValidate)) ?>"
+                      name="options[<?= /* @noEscape */ $_optionId ?>]"
+                      data-selector="options[<?= /* @noEscape */ $_optionId ?>]"
+                      rows="4"
+                      placeholder="<?= $block->escapeHtmlAttr(__('Enter %1', $_option->getTitle())) ?>"><?= $block->escapeHtml($block->getDefaultValue()) ?></textarea>
+        <?php endif; ?>
+
+        <?php if ($maxChars) : ?>
+            <div class="panth-char-counter">
+                <span class="note note_<?= /* @noEscape */ $_optionId ?>">
+                    <?= $block->escapeHtml(__('Maximum %1 characters', $maxChars)) ?>
+                    <span class="character-counter no-display"></span>
+                </span>
+            </div>
+        <?php endif; ?>
+    </div>
+
+    <?php if ($maxChars) : ?>
+        <script type="text/x-magento-init">
+            {
+                "[data-selector='options[<?= $block->escapeJs($_option->getId()) ?>]']": {
+                    "Magento_Catalog/js/product/remaining-characters": {
+                        "maxLength": "<?= /* @noEscape */ (int) $maxChars ?>",
+                        "noteSelector": ".note_<?= $block->escapeJs($_option->getId()) ?>",
+                        "counterSelector": ".note_<?= $block->escapeJs($_option->getId()) ?> .character-counter"
+                    }
+                }
+            }
+        </script>
+    <?php endif; ?>
+</div>
