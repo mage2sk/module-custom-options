@@ -1,0 +1,314 @@
+<?php
+use Hyva\Theme\Model\ViewModelRegistry;
+use Hyva\Theme\ViewModel\ProductPage;
+use Hyva\Theme\ViewModel\ProductPrice;
+use Magento\Catalog\Block\Product\View\Options;
+use Magento\Catalog\Model\Product\Option;
+use Magento\Framework\Escaper;
+
+/** @var Escaper $escaper */
+/** @var Options $block */
+/** @var ViewModelRegistry $viewModels */
+/** @var Option $option */
+
+/** @var ProductPage $productViewModel */
+$productViewModel = $viewModels->require(ProductPage::class);
+$product = $block->getProduct();
+
+/** @var ProductPrice $productPriceViewModel */
+$productPriceViewModel = $viewModels->require(ProductPrice::class);
+$displayTax = $productPriceViewModel->displayPriceIncludingTax();
+$options = $block->decorateArray($block->getOptions());
+?>
+
+<?php if (count($options)): ?>
+    <script>
+        function initOptions() {
+            return {
+                optionConfig: <?= /* @noEscape */ $block->getJsonConfig() ?>,
+                regularPriceKey: '<?= /* @noEscape */ $displayTax ? 'oldPrice' : 'baseOldPrice' ?>',
+                finalPriceKey: '<?= /* @noEscape */ $displayTax ? 'finalPrice' : 'basePrice' ?>',
+                productFinalPrice: false,
+                customOptionPrices: {},
+                <?php if ($productPriceViewModel->displayPriceInclAndExclTax()): ?>
+                productBasePrice: false,
+                customOptionBasePrices: {},
+                <?php endif; ?>
+                refs: [],
+                getFormattedOptionPrice(optionId) {
+                    if (this.customOptionPrices[optionId]) {
+                        const showSign = true;
+                        return hyva.formatPrice(this.customOptionPrices[optionId], showSign);
+                    }
+                    return false;
+                },
+                <?php if ($productPriceViewModel->displayPriceInclAndExclTax()): ?>
+                getFormattedOptionBasePrice(optionId) {
+                    if (this.customOptionBasePrices[optionId]) {
+                        const showSign = true;
+                        return hyva.formatPrice(this.customOptionBasePrices[optionId], showSign);
+                    }
+                    return false;
+                },
+                <?php endif; ?>
+                updateOptionPrice(optionId, optionPriceEl) {
+                    const container = document.createElement('div');
+                    container.innerHTML = optionPriceEl.innerHTML;
+                    const price = this.customOptionPrices[optionId],
+                        priceEl = container.querySelector('.price-wrapper');
+                    if (priceEl && price) {
+                        priceEl.innerText = hyva.formatPrice(price);
+                    }
+                    <?php if ($productPriceViewModel->displayPriceInclAndExclTax()): ?>
+                    const basePrice = this.customOptionBasePrices[optionId],
+                        basePriceEl = container.querySelector('.price-excluding-tax .price');
+                    if (basePriceEl && basePrice) {
+                        basePriceEl.innerText = hyva.formatPrice(basePrice);
+                    }
+                    <?php endif; ?>
+                    return container.innerHTML;
+                },
+                calculateOptionPrices() {
+                    for (const [customOptionId, customOption] of Object.entries(this.optionConfig)) {
+                        if (customOption.prices) {
+                            this.customOptionPrices[customOptionId] = this.calculateOptionPrice(customOption,customOptionId);
+                            <?php if ($productPriceViewModel->displayPriceInclAndExclTax()): ?>
+                            this.customOptionBasePrices[customOptionId] = this.calculateOptionBasePrice(customOption,customOptionId);
+                            <?php endif; ?>
+                        } else {
+                            for (const [childCustomOptionId, childCustomOption] of Object.entries(customOption)) {
+                                const key = customOptionId + '_' + childCustomOptionId;
+                                this.customOptionPrices[key] = this.calculateOptionPrice(childCustomOption,customOptionId,childCustomOptionId);
+                                <?php if ($productPriceViewModel->displayPriceInclAndExclTax()): ?>
+                                this.customOptionBasePrices[key] = this.calculateOptionBasePrice(childCustomOption,customOptionId,childCustomOptionId);
+                                <?php endif; ?>
+                            }
+                        }
+                    }
+                    window.dispatchEvent(new CustomEvent("update-custom-option-prices", {detail: this.customOptionPrices}));
+                    <?php if ($productPriceViewModel->displayPriceInclAndExclTax()): ?>
+                    window.dispatchEvent(new CustomEvent("update-custom-option-base-prices", {detail: this.customOptionBasePrices}));
+                    <?php endif; ?>
+                },
+                calculateOptionPrice(customOption, customOptionId, childCustomOptionId) {
+                    const customOptionCode = customOptionId + (childCustomOptionId ? '-' + childCustomOptionId : '') ;
+                    const optionElement = this.refs && this.refs['option-'+customOptionCode];
+                    let price = customOption.prices[this.finalPriceKey].amount;
+                    if (this.productFinalPrice && optionElement && optionElement.dataset.priceAmount && optionElement.dataset.priceType) {
+                        price = optionElement.dataset.priceType !== 'percent' ? optionElement.dataset.priceAmount : this.productFinalPrice * (optionElement.dataset.priceAmount / 100)
+                    }
+                    return price;
+                },
+                <?php if ($productPriceViewModel->displayPriceInclAndExclTax()): ?>
+                calculateOptionBasePrice(customOption, customOptionId, childCustomOptionId) {
+                    const customOptionCode = customOptionId + (childCustomOptionId ? '-' + childCustomOptionId : '') ;
+                    const optionElement = this.refs && this.refs['option-'+customOptionCode];
+                    let basePrice = customOption.prices['basePrice'].amount;
+                    if (this.productBasePrice && optionElement && optionElement.dataset.basePriceAmount && optionElement.dataset.priceType) {
+                        basePrice = optionElement.dataset.priceType !== 'percent' ? optionElement.dataset.basePriceAmount : this.productBasePrice * (optionElement.dataset.priceAmount / 100)
+                    }
+                    return basePrice;
+                },
+                <?php endif; ?>
+                updateCustomOptionValue($dispatch, customOptionId, target) {
+                    let active;
+                    switch (target.type) {
+                        case 'text': case 'textarea': case 'file': case 'time': case 'datetime-local': case 'date':
+                            active = !!target.value; break;
+                        case 'hidden':
+                            active = (target.value === 'save_old'); break;
+                        case 'select-one': case 'select-multiple':
+                            Array.from(target.options).forEach(option => {
+                                customOptionId = option.dataset.optionId;
+                                active = option.selected;
+                                $dispatch('update-custom-option-active', { customOptionId, active });
+                            }); return; break;
+                        case 'radio':
+                            target.checked && document.querySelectorAll('input[name="'+target.name+'"]').forEach(input => {
+                                input.dataset && input.dataset.optionId && input !== target && $dispatch('update-custom-option-active', { customOptionId: input.dataset.optionId, active: false });
+                            });
+                        case 'checkbox':
+                            const requiredOptions = document.querySelectorAll('input[name="'+target.name+'"][data-required]');
+                            const checkedOptionsQty = Array.from(requiredOptions).filter(option => option.checked).length;
+                            requiredOptions.forEach(input => {
+                                if (checkedOptionsQty) { input.required = false; input.setCustomValidity(''); }
+                                else { input.required = false; input.setCustomValidity(input.dataset.validationMessage); }
+                            });
+                            active = target.checked; break;
+                    }
+                    $dispatch('update-custom-option-active', { customOptionId, active });
+                },
+                initSelectedOptions($dispatch) {
+                    Array.from(document.querySelectorAll('.product-custom-option')).forEach(customOption => {
+                        this.updateCustomOptionValue($dispatch, customOption.dataset.optionId, customOption);
+                    })
+                },
+                eventListeners: {
+                    ['@update-product-final-price.window'](event) {
+                        this.productFinalPrice = event.detail;
+                        this.calculateOptionPrices();
+                    },
+                    <?php if ($productPriceViewModel->displayPriceInclAndExclTax()): ?>
+                    ['@update-product-base-price.window'](event) {
+                        this.productBasePrice = event.detail;
+                        this.calculateOptionPrices();
+                    }<?php endif; ?>
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* -- Panth Custom Options -- */
+        .panth-custom-options { font-family: var(--custom-options-font, 'DM Sans', sans-serif); margin: 16px 0 0; }
+
+        /* Option Row */
+        .panth-opt-row { padding: 16px 0; border-bottom: 1px solid var(--custom-options-border, #E5E7EB); }
+        .panth-opt-row:first-child { border-top: 1px solid var(--custom-options-border, #E5E7EB); }
+
+        /* Label */
+        .panth-opt-label { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; font-size: 14px; color: var(--custom-options-label, #374151); font-weight: 600; flex-wrap: wrap; }
+        .panth-opt-label .panth-opt-required { color: var(--custom-options-required, #EF4444); font-weight: 700; }
+        .panth-opt-label .panth-opt-price { display: inline-flex; align-items: center; padding: 2px 10px; background: var(--custom-options-primary, #0D9488); color: #fff; font-size: 12px; font-weight: 600; border-radius: 20px; letter-spacing: 0.3px; }
+        .panth-opt-label .price-wrapper { display: inline; }
+        .panth-opt-label .price-wrapper .price { color: #fff !important; font-size: 12px !important; font-weight: 600 !important; }
+        .panth-opt-label .price-excluding-tax { font-size: 11px; opacity: 0.8; }
+
+        /* Text Input */
+        .panth-custom-options input[type="text"].product-custom-option,
+        .panth-custom-options input[type="email"].product-custom-option,
+        .panth-custom-options input[type="url"].product-custom-option {
+            width: 100%; height: 44px; padding: 0 14px;
+            border: 1.5px solid var(--custom-options-border, #E5E7EB);
+            border-radius: var(--custom-options-radius, 10px);
+            font-size: 14px; color: var(--custom-options-text, #171717);
+            background: var(--custom-options-input-bg, #F9FAFB);
+            transition: border-color 0.15s ease, background 0.15s ease;
+            outline: none; font-family: inherit;
+        }
+        .panth-custom-options input[type="text"].product-custom-option:focus,
+        .panth-custom-options input[type="email"].product-custom-option:focus {
+            border-color: var(--custom-options-border-focus, #0D9488);
+            background: #fff; box-shadow: 0 0 0 3px rgba(13,148,136,0.08);
+        }
+
+        /* Textarea */
+        .panth-custom-options textarea.product-custom-option {
+            width: 100%; min-height: 100px; padding: 12px 14px;
+            border: 1.5px solid var(--custom-options-border, #E5E7EB);
+            border-radius: var(--custom-options-radius, 10px);
+            font-size: 14px; color: var(--custom-options-text, #171717);
+            background: var(--custom-options-input-bg, #F9FAFB);
+            transition: border-color 0.15s ease; outline: none;
+            resize: vertical; font-family: inherit; line-height: 1.6;
+        }
+        .panth-custom-options textarea.product-custom-option:focus {
+            border-color: var(--custom-options-border-focus, #0D9488);
+            background: #fff; box-shadow: 0 0 0 3px rgba(13,148,136,0.08);
+        }
+
+        /* Note text (max chars etc) */
+        .panth-opt-note { font-size: 12px; color: var(--custom-options-text-muted, #6B7280); margin-top: 4px; }
+
+        /* File Upload */
+        .panth-file-zone { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; border: 2px dashed var(--custom-options-border, #E5E7EB); border-radius: var(--custom-options-radius, 10px); background: var(--custom-options-input-bg, #F9FAFB); cursor: pointer; transition: all 0.2s ease; text-align: center; position: relative; min-height: 80px; }
+        .panth-file-zone:hover { border-color: var(--custom-options-primary, #0D9488); background: #F0FDFA; }
+        .panth-file-zone input[type="file"] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+        .panth-file-icon { color: var(--custom-options-primary, #0D9488); margin-bottom: 6px; }
+        .panth-file-text { font-size: 13px; color: var(--custom-options-text-muted, #6B7280); }
+        .panth-file-text strong { color: var(--custom-options-primary, #0D9488); }
+        .panth-file-meta { font-size: 11px; color: #9CA3AF; margin-top: 6px; }
+
+        /* Select / Dropdown */
+        .panth-custom-options select.product-custom-option,
+        .panth-custom-options select.form-select,
+        .panth-custom-options .product-options-wrapper select {
+            width: 100%; height: 44px; padding: 0 14px;
+            border: 1.5px solid var(--custom-options-border, #E5E7EB);
+            border-radius: var(--custom-options-radius, 10px);
+            font-size: 14px; color: var(--custom-options-text, #171717);
+            background: var(--custom-options-input-bg, #F9FAFB);
+            transition: border-color 0.15s ease; outline: none;
+            cursor: pointer; font-family: inherit; appearance: auto;
+        }
+        .panth-custom-options select.product-custom-option:focus,
+        .panth-custom-options select.form-select:focus {
+            border-color: var(--custom-options-border-focus, #0D9488);
+            background: #fff; box-shadow: 0 0 0 3px rgba(13,148,136,0.08);
+        }
+
+        /* Multi-select */
+        .panth-custom-options select[multiple] {
+            height: auto !important; min-height: 100px; padding: 8px !important;
+        }
+        .panth-custom-options select[multiple] option { padding: 8px 12px; border-radius: 6px; margin-bottom: 2px; }
+        .panth-custom-options select[multiple] option:checked { background: #F0FDFA; color: var(--custom-options-primary, #0D9488); }
+
+        /* Radio Buttons */
+        .panth-custom-options input[type="radio"] { appearance: none; -webkit-appearance: none; width: 20px; height: 20px; border: 2px solid #D1D5DB; border-radius: 50%; background: #fff; cursor: pointer; transition: all 0.15s ease; flex-shrink: 0; position: relative; }
+        .panth-custom-options input[type="radio"]:checked { border-color: var(--custom-options-primary, #0D9488); background: var(--custom-options-primary, #0D9488); }
+        .panth-custom-options input[type="radio"]:checked::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 8px; height: 8px; border-radius: 50%; background: #fff; }
+        .panth-custom-options input[type="radio"]:focus { box-shadow: 0 0 0 3px rgba(13,148,136,0.15); }
+
+        /* Checkboxes */
+        .panth-custom-options input[type="checkbox"] { appearance: none; -webkit-appearance: none; width: 20px; height: 20px; border: 2px solid #D1D5DB; border-radius: 6px; background: #fff; cursor: pointer; transition: all 0.15s ease; flex-shrink: 0; position: relative; }
+        .panth-custom-options input[type="checkbox"]:checked { border-color: var(--custom-options-primary, #0D9488); background: var(--custom-options-primary, #0D9488); }
+        .panth-custom-options input[type="checkbox"]:checked::after { content: ''; position: absolute; top: 3px; left: 6px; width: 5px; height: 10px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+        .panth-custom-options input[type="checkbox"]:focus { box-shadow: 0 0 0 3px rgba(13,148,136,0.15); }
+
+        /* Radio/Checkbox label rows */
+        .panth-choice-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1.5px solid var(--custom-options-border, #E5E7EB); border-radius: var(--custom-options-radius, 10px); background: #fff; cursor: pointer; transition: all 0.15s ease; margin-bottom: 6px; font-size: 14px; color: var(--custom-options-text, #171717); }
+        .panth-choice-row:hover { border-color: var(--custom-options-primary, #0D9488); background: #F0FDFA; }
+        .panth-choice-row:has(input:checked) { border-color: var(--custom-options-primary, #0D9488); background: #F0FDFA; }
+        .panth-choice-row .panth-choice-price { margin-left: auto; font-size: 13px; font-weight: 600; color: var(--custom-options-primary, #0D9488); white-space: nowrap; }
+
+        /* Date/Time inputs */
+        .panth-custom-options input[type="date"],
+        .panth-custom-options input[type="time"],
+        .panth-custom-options input[type="datetime-local"] {
+            width: 100%; max-width: 280px; height: 44px; padding: 0 14px;
+            border: 1.5px solid var(--custom-options-border, #E5E7EB);
+            border-radius: var(--custom-options-radius, 10px);
+            font-size: 14px; color: var(--custom-options-text, #171717);
+            background: var(--custom-options-input-bg, #F9FAFB);
+            transition: border-color 0.15s ease; outline: none; font-family: inherit;
+        }
+        .panth-custom-options input[type="date"]:focus,
+        .panth-custom-options input[type="time"]:focus,
+        .panth-custom-options input[type="datetime-local"]:focus {
+            border-color: var(--custom-options-border-focus, #0D9488);
+            background: #fff; box-shadow: 0 0 0 3px rgba(13,148,136,0.08);
+        }
+
+        /* Date dropdowns (legacy) */
+        .panth-date-selects { display: flex; gap: 8px; flex-wrap: wrap; }
+        .panth-date-selects select { height: 44px; padding: 0 10px; border: 1.5px solid var(--custom-options-border, #E5E7EB); border-radius: var(--custom-options-radius, 10px); font-size: 14px; background: var(--custom-options-input-bg, #F9FAFB); color: var(--custom-options-text, #171717); cursor: pointer; outline: none; font-family: inherit; min-width: 70px; }
+        .panth-date-selects select:focus { border-color: var(--custom-options-border-focus, #0D9488); background: #fff; }
+        .panth-date-separator { display: flex; align-items: center; font-size: 16px; color: #9CA3AF; font-weight: 600; }
+
+        /* Existing file display */
+        .panth-file-existing { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #F0FDFA; border: 1.5px solid #CCFBF1; border-radius: var(--custom-options-radius, 10px); margin-bottom: 8px; }
+        .panth-file-existing-name { font-size: 14px; color: var(--custom-options-text, #171717); font-weight: 500; }
+        .panth-file-change { font-size: 13px; font-weight: 600; color: var(--custom-options-primary, #0D9488); cursor: pointer; margin-left: auto; }
+        .panth-file-change:hover { text-decoration: underline; }
+
+        /* Mobile */
+        @media (max-width: 640px) {
+            .panth-opt-row { padding: 12px 0; }
+            .panth-custom-options input[type="date"],
+            .panth-custom-options input[type="time"],
+            .panth-custom-options input[type="datetime-local"] { max-width: 100%; }
+            .panth-choice-row { padding: 8px 10px; font-size: 13px; }
+            .panth-date-selects select { min-width: 60px; height: 40px; font-size: 13px; }
+        }
+    </style>
+
+    <div class="panth-custom-options"
+         x-data="initOptions()"
+         x-init="refs = $refs; $nextTick(() => { calculateOptionPrices(); initSelectedOptions($dispatch); })"
+         x-bind="eventListeners">
+        <?php foreach ($options as $option): ?>
+            <?= $block->getOptionHtml($option) ?>
+        <?php endforeach; ?>
+    </div>
+<?php endif; ?>

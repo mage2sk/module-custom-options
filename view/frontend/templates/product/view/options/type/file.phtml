@@ -1,0 +1,88 @@
+<?php
+declare(strict_types=1);
+use Hyva\Theme\Model\ViewModelRegistry;
+use Hyva\Theme\ViewModel\ProductPrice;
+use Magento\Catalog\Pricing\Price\CustomOptionPrice;
+use Magento\Framework\Escaper;
+use Magento\Framework\View\Helper\SecureHtmlRenderer;
+use Magento\Catalog\Block\Product\View\Options\Type\File;
+
+/** @var File $block */
+/** @var Escaper $escaper */
+/** @var ViewModelRegistry $viewModels */
+/** @var SecureHtmlRenderer $secureRenderer */
+
+$product = $block->getProduct();
+$option = $block->getOption();
+$optionId = $option->getId();
+$fileInfo = $block->getFileInfo();
+$fileExists = $fileInfo->hasData();
+$fileName = 'options_' . $escaper->escapeHtmlAttr($optionId) . '_file';
+$fieldNameAction = $fileName . '_action';
+$fieldValueAction = $fileExists ? 'save_old' : 'save_new';
+$fileNamed = $fileName . '_name';
+
+/** @var ProductPrice $productPriceViewModel */
+$productPriceViewModel = $viewModels->require(ProductPrice::class);
+$optionPrice = $productPriceViewModel->getCustomOptionPrice($option, CustomOptionPrice::PRICE_CODE, $product);
+if ($productPriceViewModel->displayPriceInclAndExclTax()) {
+    $optionBasePrice = $productPriceViewModel->getCustomOptionPriceExclTax($option, CustomOptionPrice::PRICE_CODE, $product);
+}
+?>
+
+<div class="panth-opt-row">
+    <label class="panth-opt-label"
+           for="options_<?= $escaper->escapeHtmlAttr($optionId) ?>_text"
+           x-html="updateOptionPrice('<?= $escaper->escapeJs($optionId) ?>', $el)">
+        <span><?= $escaper->escapeHtml($option->getTitle()) ?></span>
+        <?php if ($option->getIsRequire()): ?>
+            <span class="panth-opt-required">*</span>
+        <?php endif; ?>
+        <span class="panth-opt-price"><?= /* @noEscape */ $block->getFormattedPrice() ?></span>
+    </label>
+
+    <?php if ($fileExists): ?>
+    <div class="panth-file-existing">
+        <span class="panth-file-existing-name <?= /* @noEscape */ $fileNamed ?>"><?= $escaper->escapeHtml($fileInfo->getTitle()) ?></span>
+        <a href="#" class="panth-file-change" id="change-<?= /* @noEscape */ $fileName ?>"
+           @click.prevent="$event.target.parentNode.remove(); document.getElementById('input-box-<?= /* @noEscape */ $fileName ?>').style.display = 'block'; document.getElementById('<?= /* @noEscape */ $fileName ?>').disabled = false; document.getElementById('<?= /* @noEscape */ $fileName ?>-hidden').dispatchEvent(new Event('image-removed'));">
+            <?= $escaper->escapeHtml(__('Change')) ?>
+        </a>
+    </div>
+    <?php endif; ?>
+
+    <div class="<?= $fileExists ? 'hidden' : '' ?>" id="input-box-<?= /* @noEscape */ $fileName ?>">
+        <div class="panth-file-zone">
+            <svg class="panth-file-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <p class="panth-file-text">Drag & drop or <strong>browse</strong></p>
+            <input type="file"
+                   name="<?= /* @noEscape */ $fileName ?>"
+                   id="<?= /* @noEscape */ $fileName ?>"
+                   class="product-custom-option"
+                   <?= $fileExists ? 'disabled' : '' ?>
+                   <?php if ($option->getIsRequire()): ?>required oninvalid="this.setCustomValidity('<?= $escaper->escapeHtmlAttr(__("Please select a file.")) ?>')" oninput="this.setCustomValidity('')"<?php endif; ?>
+                   data-price-amount="<?= $escaper->escapeHtmlAttr($optionPrice) ?>"
+                   data-price-type="<?= $escaper->escapeHtmlAttr($option->getPriceType()) ?>"
+                   data-option-id="<?= $escaper->escapeHtmlAttr($optionId) ?>"
+                   x-ref="option-<?= $escaper->escapeHtmlAttr($optionId) ?>"
+                   x-on:change="updateCustomOptionValue($dispatch, '<?= $escaper->escapeJs($optionId) ?>', $event.target)">
+        </div>
+        <input type="hidden" name="<?= /* @noEscape */ $fieldNameAction ?>"
+               id="<?= /* @noEscape */ $fileName ?>-hidden"
+               class="product-custom-option hidden-form-file"
+               data-price-amount="<?= $escaper->escapeHtmlAttr($option->getPrice()) ?>"
+               data-price-type="<?= $escaper->escapeHtmlAttr($option->getPriceType()) ?>"
+               data-option-id="<?= $escaper->escapeHtmlAttr($optionId) ?>"
+               value="<?= /* @noEscape */ $fieldValueAction ?>"
+               @image-removed="$event.target.value = 'save_new'; updateCustomOptionValue($dispatch, '<?= $escaper->escapeHtmlAttr($optionId) ?>', $event.target)">
+        <div class="panth-file-meta">
+            <?php if ($option->getFileExtension()): ?>
+                <?= $escaper->escapeHtml($option->getFileExtension()) ?>
+            <?php endif; ?>
+            <?php if ($option->getImageSizeX() > 0): ?>
+                &middot; Max <?= (int)$option->getImageSizeX() ?>x<?= (int)$option->getImageSizeY() ?>px
+            <?php endif; ?>
+        </div>
+    </div>
+    <?= $fileExists ? /* @noEscape */ $secureRenderer->renderStyleAsTag('display:none', '#input-box-' . /* @noEscape */ $fileName) : '' ?>
+</div>

@@ -1,0 +1,14 @@
+{
+    "custom-options-primary": "#0D9488",
+    "custom-options-border": "#E5E7EB",
+    "custom-options-border-focus": "#0D9488",
+    "custom-options-bg": "#FFFFFF",
+    "custom-options-input-bg": "#F9FAFB",
+    "custom-options-text": "#171717",
+    "custom-options-text-muted": "#6B7280",
+    "custom-options-label": "#374151",
+    "custom-options-price": "#0D9488",
+    "custom-options-required": "#EF4444",
+    "custom-options-radius": "10px",
+    "custom-options-font": "'DM Sans', sans-serif"
+}

@@ -1,0 +1,29 @@
+<?php
+declare(strict_types=1);
+use Hyva\Theme\Model\ViewModelRegistry;
+use Hyva\Theme\ViewModel\CustomOption;
+use Magento\Catalog\Block\Product\View\Options\Type\Select;
+use Magento\Framework\Escaper;
+
+/** @var Select $block */
+/** @var Escaper $escaper */
+/** @var ViewModelRegistry $viewModels */
+
+$option = $block->getOption();
+$product = $block->getProduct();
+/** @var CustomOption $customOptionsViewModel */
+$customOptionsViewModel = $viewModels->require(CustomOption::class);
+?>
+
+<div class="panth-opt-row">
+    <label class="panth-opt-label"
+           for="options_<?= $escaper->escapeHtmlAttr($option->getId()) ?>">
+        <span><?= $escaper->escapeHtml($option->getTitle()) ?></span>
+        <?php if ($option->getIsRequire()): ?>
+            <span class="panth-opt-required">*</span>
+        <?php endif; ?>
+    </label>
+    <div>
+        <?= $customOptionsViewModel->getOptionHtml($option, $product); ?>
+    </div>
+</div>
