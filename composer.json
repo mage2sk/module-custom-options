@@ -2,7 +2,7 @@
     "name": "mage2kishan/module-custom-options",
     "description": "Panth Custom Options \u2014 beautifully styled product custom options for Hyva-based Magento 2 storefronts. Replaces the default custom options rendering with a modern, accessible UI featuring styled text inputs, textareas, file upload zones, select/radio/checkbox controls, and HTML5 date pickers, all governed by CSS custom properties for easy theming. Requires Panth_Core.",
     "type": "magento2-module",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "license": "proprietary",
     "keywords": [
         "magento2",
