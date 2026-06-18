@@ -4,6 +4,16 @@ All notable changes to this extension are documented here. The format
 is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.5] -- 2026-06-18
+
+### Changed
+- Rewrote README with gold-template structure: Quick Answer block, Who Is It For,
+  grouped Key Features, Supported Input Types table, Configuration table sourced
+  from system.xml, Theming section, FAQ, Support table with Product Page row,
+  Quick Links table, and closing CTA. Updated canonical URL and SEO keywords.
+
+---
+
 ## [1.0.0] -- Initial release
 
 ### Added
