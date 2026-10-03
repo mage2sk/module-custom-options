@@ -1,0 +1,50 @@
+<?php
+declare(strict_types=1);
+use Hyva\Theme\Model\ViewModelRegistry;
+use Hyva\Theme\ViewModel\CustomOption;
+use Magento\Catalog\Api\Data\ProductCustomOptionInterface;
+use Magento\Catalog\Block\Product\View\Options\Type\Select;
+use Magento\Framework\Escaper;
+
+/** @var Select $block */
+/** @var Escaper $escaper */
+/** @var ViewModelRegistry $viewModels */
+
+$option = $block->getOption();
+$product = $block->getProduct();
+/** @var CustomOption $customOptionsViewModel */
+$customOptionsViewModel = $viewModels->require(CustomOption::class);
+$optionId = $escaper->escapeHtmlAttr($option->getId());
+$isChoiceGroup = in_array(
+    $option->getType(),
+    [ProductCustomOptionInterface::OPTION_TYPE_RADIO, ProductCustomOptionInterface::OPTION_TYPE_CHECKBOX],
+    true
+);
+?>
+
+<div class="panth-opt-row">
+    <?php if ($isChoiceGroup): ?>
+    <span class="panth-opt-label" id="options-<?= /* @noEscape */ $optionId ?>-title">
+        <span><?= $escaper->escapeHtml($option->getTitle()) ?></span>
+        <?php if ($option->getIsRequire()): ?>
+            <span class="panth-opt-required">*</span>
+        <?php endif; ?>
+    </span>
+    <div role="<?= $option->getType() === ProductCustomOptionInterface::OPTION_TYPE_RADIO ? 'radiogroup' : 'group' ?>"
+         aria-labelledby="options-<?= /* @noEscape */ $optionId ?>-title"
+         <?php if ($option->getIsRequire()): ?>aria-required="true"<?php endif; ?>>
+        <?= $customOptionsViewModel->getOptionHtml($option, $product); ?>
+    </div>
+    <?php else: ?>
+    <label class="panth-opt-label"
+           for="options_<?= /* @noEscape */ $optionId ?>">
+        <span><?= $escaper->escapeHtml($option->getTitle()) ?></span>
+        <?php if ($option->getIsRequire()): ?>
+            <span class="panth-opt-required">*</span>
+        <?php endif; ?>
+    </label>
+    <div>
+        <?= $customOptionsViewModel->getOptionHtml($option, $product); ?>
+    </div>
+    <?php endif; ?>
+</div>

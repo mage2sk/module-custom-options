@@ -1,0 +1,50 @@
+body .panth-custom-options .panth-opt-label .panth-opt-price:empty {
+    display: none;
+}
+
+body .panth-custom-options .panth-opt-label .panth-opt-price {
+    white-space: nowrap;
+}
+
+body .panth-custom-options .panth-file-meta,
+body .panth-custom-options .panth-file-preview-size,
+body .panth-custom-options .panth-opt-label .price-excluding-tax {
+    font-size: 12px;
+    opacity: 1;
+    color: var(--custom-options-text-muted, var(--color-fg-secondary, #525252));
+}
+
+body .panth-custom-options .panth-date-separator {
+    color: var(--custom-options-text-muted, var(--color-fg-secondary, #525252));
+}
+
+body .panth-custom-options input[type="radio"],
+body .panth-custom-options input[type="checkbox"] {
+    border-color: #737373;
+}
+
+body .panth-custom-options input[type="radio"]:checked,
+body .panth-custom-options input[type="checkbox"]:checked {
+    border-color: var(--custom-options-primary, var(--color-primary-fill, #0F766E));
+}
+
+@media (max-width: 1023px) {
+    body .panth-custom-options input[type="text"].product-custom-option,
+    body .panth-custom-options input[type="email"].product-custom-option,
+    body .panth-custom-options input[type="url"].product-custom-option,
+    body .panth-custom-options textarea.product-custom-option,
+    body .panth-custom-options select.product-custom-option,
+    body .panth-custom-options select.form-select,
+    body .panth-custom-options input[type="date"],
+    body .panth-custom-options input[type="time"],
+    body .panth-custom-options input[type="datetime-local"],
+    body .panth-custom-options .panth-date-selects select {
+        font-size: 16px;
+        min-height: 44px;
+    }
+
+    body .panth-custom-options .panth-choice-row {
+        min-height: 44px;
+        font-size: 14px;
+    }
+}

@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <css src="Panth_CustomOptions::css/hyva-options.css"/>
+    </head>
+    <body>
+        <referenceBlock name="product.info.options">
+            <action method="setTemplate" ifconfig="panth_customoptions/general/enabled">
+                <argument name="template" xsi:type="string">Panth_CustomOptions::product/view/options/options.phtml</argument>
+            </action>
+        </referenceBlock>
+        <referenceBlock name="product.info.options.text">
+            <action method="setTemplate" ifconfig="panth_customoptions/general/enabled">
+                <argument name="template" xsi:type="string">Panth_CustomOptions::product/view/options/type/text.phtml</argument>
+            </action>
+        </referenceBlock>
+        <referenceBlock name="product.info.options.select">
+            <action method="setTemplate" ifconfig="panth_customoptions/general/enabled">
+                <argument name="template" xsi:type="string">Panth_CustomOptions::product/view/options/type/select.phtml</argument>
+            </action>
+        </referenceBlock>
+        <referenceBlock name="product.info.options.file">
+            <action method="setTemplate" ifconfig="panth_customoptions/general/enabled">
+                <argument name="template" xsi:type="string">Panth_CustomOptions::product/view/options/type/file.phtml</argument>
+            </action>
+        </referenceBlock>
+        <referenceBlock name="product.info.options.date">
+            <action method="setTemplate" ifconfig="panth_customoptions/general/enabled">
+                <argument name="template" xsi:type="string">Panth_CustomOptions::product/view/options/type/date-html5.phtml</argument>
+            </action>
+        </referenceBlock>
+    </body>
+</page>

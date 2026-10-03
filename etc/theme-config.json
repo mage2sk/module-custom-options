@@ -1,0 +1,14 @@
+{
+    "custom-options-primary": "#0F766E",
+    "custom-options-border": "#E5E5E5",
+    "custom-options-border-focus": "#0D9488",
+    "custom-options-bg": "#FFFFFF",
+    "custom-options-input-bg": "#F9FAFB",
+    "custom-options-text": "#171717",
+    "custom-options-text-muted": "#525252",
+    "custom-options-label": "#171717",
+    "custom-options-price": "#0F766E",
+    "custom-options-required": "#DC2626",
+    "custom-options-radius": "10px",
+    "custom-options-font": "inherit"
+}
