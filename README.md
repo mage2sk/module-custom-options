@@ -165,7 +165,7 @@ The module creates no tables. A saved value of `panth_customoptions/general/enab
 
 ## License
 
-Commercial software license. See [LICENSE.txt](LICENSE.txt) in this repository.
+Free and open source under the MIT License. See [LICENSE.txt](LICENSE.txt).
 
 ## Changelog
 
